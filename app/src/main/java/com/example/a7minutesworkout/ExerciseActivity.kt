@@ -1,7 +1,9 @@
 package com.example.a7minutesworkout
 
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
+import android.os.CountDownTimer
+import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -14,28 +16,87 @@ class ExerciseActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityExerciseBinding
 
+    private var restTimer: CountDownTimer? = null
+    private var restProgress = 0
+
+    private var exerciseTimer : CountDownTimer? = null
+    private var exerciseProgress = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityExerciseBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setSupportActionBar(binding.toolbar)
+        setSupportActionBar(binding?.toolbarExercise)
 
-        val navController = findNavController(R.id.nav_host_fragment_content_exercise)
-        appBarConfiguration = AppBarConfiguration(navController.graph)
-        setupActionBarWithNavController(navController, appBarConfiguration)
-
-        binding.fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null)
-                .setAnchorView(R.id.fab).show()
+        if (supportActionBar != null) {
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
         }
+
+        binding?.toolbarExercise?.setNavigationOnClickListener {
+            onBackPressed()
+        }
+
+        binding?.flProgressBar?.visibility = View.INVISIBLE
+        setupRestView()
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment_content_exercise)
-        return navController.navigateUp(appBarConfiguration)
-                || super.onSupportNavigateUp()
+    private fun setupRestView(){
+        if (restTimer != null){
+            restTimer?.cancel()
+            restProgress = 0
+        }
+        setRestProgressBar()
+    }
+
+    private fun setRestProgressBar() {
+        binding?.progressBar?.progress = restProgress
+        restTimer = object : CountDownTimer(10000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                restProgress++
+                binding?.progressBar?.progress = 10 - restProgress
+                binding?.tvTimer?.text = (10 - restProgress).toString()
+            }
+
+            override fun onFinish() {
+                Toast.makeText(
+                    this@ExerciseActivity, "Now start the exercise",
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+            }
+        }.start()
+    }
+
+    private fun setExerciseProgressBar() {
+        binding?.progressBarExercise?.progress = restProgress
+        restTimer = object : CountDownTimer(10000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                exerciseProgress++
+                binding?.progressBarExercise?.progress = 10 - restProgress
+                binding?.tvTimer?.text = (10 - restProgress).toString()
+            }
+
+            override fun onFinish() {
+                Toast.makeText(
+                    this@ExerciseActivity, "Now start the exercise",
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+            }
+        }.start()
+    }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (restTimer != null) {
+            restTimer?.cancel()
+            restProgress = 0
+        }
+
+
+
     }
 }
