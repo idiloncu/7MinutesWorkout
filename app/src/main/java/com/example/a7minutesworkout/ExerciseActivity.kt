@@ -1,11 +1,14 @@
 package com.example.a7minutesworkout
 
+import android.app.Dialog
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.a7minutesworkout.databinding.ActivityExerciseBinding
+import com.example.a7minutesworkout.databinding.DialogCustomBackInfoBinding
 
 class ExerciseActivity : AppCompatActivity() {
 
@@ -16,6 +19,7 @@ class ExerciseActivity : AppCompatActivity() {
     private var binding: ActivityExerciseBinding? = null
     private var exerciseList: ArrayList<ExerciseModel>? = null
     private var currentExercisePosition = -1
+    private var exerciseAdapter: ExerciseStatusAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,10 +33,38 @@ class ExerciseActivity : AppCompatActivity() {
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
         }
         binding?.toolbarExercise?.setNavigationOnClickListener {
-            onBackPressed()
+            customDialogForBackButton()
         }
 
         setupRestView()
+        setupExerciseStatusRecyclerView()
+    }
+    override fun onBackPressed() {
+        customDialogForBackButton()
+        super.onBackPressed()
+    }
+
+    private fun customDialogForBackButton() {
+        val customDialog = Dialog(this)
+        val dialogBinding=DialogCustomBackInfoBinding.inflate(layoutInflater)
+        customDialog.setContentView(dialogBinding.root)
+        customDialog.setCanceledOnTouchOutside(false)
+        dialogBinding.btnYes.setOnClickListener{
+            this@ExerciseActivity.finish()
+            customDialog.dismiss()
+        }
+        dialogBinding.btnNo.setOnClickListener{
+            customDialog.dismiss()
+        }
+        customDialog.show()
+
+    }
+
+    private fun setupExerciseStatusRecyclerView(){
+        binding?.rvExerciseStatus?.layoutManager=
+           LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
+        exerciseAdapter= ExerciseStatusAdapter(exerciseList!!)
+
     }
 
     private fun setupRestView() {
@@ -44,7 +76,6 @@ class ExerciseActivity : AppCompatActivity() {
         binding?.ivImage?.visibility = View.INVISIBLE
         binding?.tvUpcomingLabel?.visibility = View.VISIBLE
         binding?.tvUpcomingExerciseName?.visibility = View.VISIBLE
-
 
         if (restTimer != null) {
             restTimer?.cancel()
@@ -58,7 +89,6 @@ class ExerciseActivity : AppCompatActivity() {
     }
 
     private fun setRestProgressBar() {
-
         binding?.progressBar?.progress = restProgress
         restTimer = object : CountDownTimer(10000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
@@ -71,6 +101,8 @@ class ExerciseActivity : AppCompatActivity() {
 
             override fun onFinish() {
                 currentExercisePosition++
+                exerciseList!![currentExercisePosition].setIsSelected(true)
+                exerciseAdapter!!.notifyDataSetChanged()
                 setupExerciseView()
             }
         }.start()
@@ -85,7 +117,6 @@ class ExerciseActivity : AppCompatActivity() {
         binding?.ivImage?.visibility = View.VISIBLE
         binding?.tvUpcomingLabel?.visibility = View.INVISIBLE
         binding?.tvUpcomingExerciseName?.visibility = View.INVISIBLE
-
 
         if (exerciseTimer != null) {
             exerciseTimer?.cancel()
@@ -102,7 +133,7 @@ class ExerciseActivity : AppCompatActivity() {
 
         binding?.progressBarExercise?.progress = exerciseProgress
 
-        exerciseTimer = object : CountDownTimer(1000, 1000) {
+        exerciseTimer = object : CountDownTimer(30000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 exerciseProgress++
                 binding?.progressBarExercise?.progress = 30 - exerciseProgress
@@ -110,6 +141,10 @@ class ExerciseActivity : AppCompatActivity() {
             }
 
             override fun onFinish() {
+                exerciseList!![currentExercisePosition].setIsSelected(false)
+                exerciseList!![currentExercisePosition].setIsSelected(true)
+
+                exerciseAdapter!!.notifyDataSetChanged()
 
                 if (currentExercisePosition < exerciseList?.size!! - 1) {
                     setupExerciseView()
